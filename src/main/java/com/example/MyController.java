@@ -32,13 +32,13 @@ public class MyController {
         return this.service.sayHello(hello);
     }
 
-    @PreAuthorize("hasPermission(1, #permission, 'read')")
+    @PreAuthorize("hasPermission(#permission, 'UMA')")
     @RequestMapping(value = "/method1", method = RequestMethod.GET)
     public String callMethod1(@Valid @RequestParam String permission) {
         return "executed Method 1";
     }
 
-    @PreAuthorize("hasPermission(2, #permission, 'read')")
+    @PreAuthorize("hasPermission(#permission, 'Entitlements')")
     @RequestMapping(value = "/method2", method = RequestMethod.GET)
     public String callMethod2(@Valid @RequestParam String permission) {
         return "executed Method 2";

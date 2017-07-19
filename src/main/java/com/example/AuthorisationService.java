@@ -1,10 +1,7 @@
 package com.example;
 
-import com.example.model.TimedPermissions;
 import com.example.model.TimedPermissionTicket;
 import java.time.LocalDateTime;
-import java.time.ZoneOffset;
-import java.util.Date;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Map;
@@ -12,7 +9,6 @@ import java.util.Set;
 import java.util.logging.Logger;
 import org.json.JSONArray;
 import org.json.JSONObject;
-import org.springframework.cloud.client.circuitbreaker.EnableCircuitBreaker;
 import org.springframework.http.HttpEntity;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.MediaType;
@@ -28,43 +24,60 @@ import org.springframework.web.client.RestTemplate;
 
 /**
  *
- * @author straubec
+ * @author roland.werner
  */
 @Service
-@EnableCircuitBreaker
 public class AuthorisationService {
 
     private static final Logger LOG = Logger.getLogger(AuthorisationService.class.getName());
 
+    /**
+     *
+     */
     protected RestTemplate template;
-    protected OAuth2RestTemplate oauth2Template;
 
+    /**
+     *
+     */
+    protected OAuth2RestTemplate oauth2Template;
+    
     //hack: Permission Ticket "cache": permission --> TimedPermission
     private Map<String, TimedPermissionTicket> permissionTickets = new HashMap<>();
 
-    //hack: Entitlements "Cache": user --> permissions
-    private Map<String, TimedPermissions> permissions = new HashMap<>();
 
+
+    /**
+     *
+     * @param template
+     * @param oauth2Template
+     */
     public AuthorisationService(RestTemplate template, OAuth2RestTemplate oauth2Template) {
         this.template = template;
         this.oauth2Template = oauth2Template;
     }
 
+    /**method1 (UMA Permission)
+     *
+     * @param permission
+     * @return
+     */
     public boolean method1(String permission) {
         LOG.info("Called method1 (UMA) with permission " + permission);
         return checkPermissionWithUMA(permission);
     }
 
-    public boolean method2(String permission, String token) {
-        LOG.info("Called method2 (Entitlements) with permission " + permission);
-        LOG.info("Token " + token);
-        String claims = retrieveClaimsFromJWT(token);
-        LocalDateTime refreshDate = calculateExpirationFromJWT(claims);
-        String user = retrieveUsernameFromToken(claims);
-        LOG.info("Retrieved from token: username " + user + " refreshDate " +refreshDate);
-        return checkPermissionWithEntitlementsInCache(user, refreshDate, permission);
-    }
 
+
+    
+
+    
+    //--- UMA ----
+    
+    /**Check Permission with UMA.
+     * 
+     * @param permission
+     * @return 
+     */
     private boolean checkPermissionWithUMA(String permission) {
         LOG.info("Called checkPermissionWithUMA");
         boolean allowed = false;
@@ -85,45 +98,8 @@ public class AuthorisationService {
         return allowed;
     }
 
-    private boolean checkPermissionWithEntitlementsInCache(String user, LocalDateTime expiration, String permission) {
-        LOG.info("Called checkPermissionWithEntitlementsInCache");
-        boolean allowed = false;
-        TimedPermissions timedPermissions = retrievePermissionsFromCache(user);
-        LocalDateTime refreshDate = null;
-        if (timedPermissions != null) {
-            LOG.info("Found Permissions in cache: " + timedPermissions.getPermissions().toString());
-            refreshDate = timedPermissions.getRefreshDate();
-        } else {
-            LOG.info("No Permissions in cache");
-            timedPermissions = new TimedPermissions();
-        }
+    
 
-        if (refreshDate != null && refreshDate.isAfter(LocalDateTime.now())) {
-            //cache content still valid, not expired --> check permission in cache
-            LOG.info("Permissions still valid");
-            allowed = timedPermissions.hasPermission(permission);
-        } else {
-            //not found in cache or no longer valid --> fetch new
-            LOG.info("Permissions no longer valid. RefreshDate: " + refreshDate + ", Now is " + LocalDateTime.now());
-            String rpt = retrieveRPTviaEntitlements();
-            Set<String> permissionsSet = extractPermissionsFromRPT(rpt);
-            timedPermissions.setPermissions(permissionsSet);
-            timedPermissions.setRefreshDate(expiration);
-            addPermissionsToCache(user, timedPermissions);
-
-            LOG.info("Permissions of user: " + timedPermissions.getPermissions().toString());
-            if (permissionsSet.contains(permission)) {
-                allowed = true;
-            }
-        }
-        LOG.info("Permission checked, returning: " + allowed);
-        return allowed;
-    }
-
-    private boolean checkPermissionWithEntitlements(String permission) {
-        String rpt = retrieveRPTviaEntitlements();
-        return checkPermissionFromRPT(rpt, permission);
-    }
 
     private boolean checkPermissionFromRPT(String rpt, String permission) {
         boolean allowed = false;
@@ -134,13 +110,6 @@ public class AuthorisationService {
         return allowed;
     }
 
-    private TimedPermissions retrievePermissionsFromCache(String user) {
-        return permissions.get(user);
-    }
-
-    private void addPermissionsToCache(String user, TimedPermissions timedPermissions) {
-        permissions.put(user, timedPermissions);
-    }
 
     private String accessPermissionTicket(String permission) {
         LocalDateTime refreshDate = null;
@@ -185,11 +154,6 @@ public class AuthorisationService {
         return permissionTicket;
     }
 
-    private String retrieveClaimsFromJWT(String base64Token) {
-        Jwt jwt = JwtHelper.decode(base64Token);
-        String claims = jwt.getClaims();
-        return claims;
-    }
     
     private LocalDateTime retrieveRefreshDateFromToken(String token) {
         int expiresIn = retrieveExpirationFromToken(token);
@@ -197,29 +161,13 @@ public class AuthorisationService {
         return refreshDate;
     }
 
-    private LocalDateTime calculateExpirationFromJWT(String base64Token) {
-        JSONObject responseJSON = new JSONObject(base64Token);
-        long exp = responseJSON.getInt("exp");
-        LocalDateTime ldt = LocalDateTime.ofEpochSecond(exp, 0, ZoneOffset.ofHours(2));
-
-        //long iat = responseJSON.getInt("iat");
-        //LocalDateTime ldt = LocalDateTime.now().plusSeconds(exp - iat);
-        LOG.info("Calculated RefreshDate: " + ldt);
-
-        return ldt;
-    }
 
     private int retrieveExpirationFromToken(String token) {
         JSONObject responseJSON = new JSONObject(token);
         int expiresIn = responseJSON.getInt("expires_in");
         return expiresIn;
     }
-    
-    private String retrieveUsernameFromToken(String token) {
-        JSONObject responseJSON = new JSONObject(token);
-        String username = responseJSON.getString("preferred_username");
-        return username;
-    }
+
     
 
     private String retrieveClientAccessToken() {
@@ -262,19 +210,7 @@ public class AuthorisationService {
         return responseJSON.getString("ticket");
     }
 
-    private String retrieveRPTviaEntitlements() {
-        LOG.info("Called retrieveEntitlements");
-
-        String url = "http://localhost:8080/auth/realms/demo/authz/entitlement/openIdDemo";
-
-        String response = this.oauth2Template.getForObject(url, String.class);
-
-        JSONObject responseJSON = new JSONObject(response);
-
-        LOG.info("entitlements retrieved");
-        return responseJSON.getString("rpt");
-    }
-
+    
     private String retrieveRPTviaUMA(String permissionTicket) {
         LOG.info("Called retrieveAuthorisation");
         HttpHeaders headers = new HttpHeaders();
@@ -293,7 +229,9 @@ public class AuthorisationService {
         return responseJSON.getString("rpt");
     }
 
-    private Set<String> extractPermissionsFromRPT(String authorisationToken) {
+    // --- BOTH ---
+    
+    public Set<String> extractPermissionsFromRPT(String authorisationToken) {
         Set<String> resourceSetList = new HashSet<>();
         Jwt jwt = JwtHelper.decode(authorisationToken);
         if (jwt != null) {

@@ -10,7 +10,6 @@ import java.util.logging.Logger;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.access.PermissionEvaluator;
 import org.springframework.security.core.Authentication;
-import org.springframework.security.oauth2.provider.OAuth2Authentication;
 import org.springframework.security.oauth2.provider.authentication.OAuth2AuthenticationDetails;
 import org.springframework.stereotype.Service;
 
@@ -25,28 +24,31 @@ public class MyPermissionEvaluator implements PermissionEvaluator {
     @Autowired    
     private final AuthorisationService authService = null;
     
+    @Autowired    
+    private final EntitlementsService entitlementsService = null;
+    
     @Override
     public boolean hasPermission(Authentication a, Object o, Object o1) {
-        LOG.info("hasPermission called.");
-        return true;
+        return hasPermission(a, 1, (String) o, o1);
     }
 
     @Override
     public boolean hasPermission(Authentication a, Serializable srlzbl, String string, Object o) {
-        LOG.info("hasPermission called.");
+        LOG.info("-----------------------------------------");
+        LOG.info("--------- hasPermission called. ---------");
+        LOG.info("-----------------------------------------");
         OAuth2AuthenticationDetails details = (OAuth2AuthenticationDetails) a.getDetails();
-        String tokenValue = details.getTokenValue();
-        LOG.info("Principal " + ((OAuth2Authentication) a).getPrincipal());
-        LOG.info("Credential " + ((OAuth2Authentication) a).getCredentials());
-        LOG.info("Name " + ((OAuth2Authentication) a).getUserAuthentication().getName());        
+        String tokenValue = details.getTokenValue();          
         
-        
+        String method = (String) o;
         
         boolean allowed = false;
-        if (srlzbl.equals(1)) {
+        if (method.equals("UMA")) {
             allowed = this.authService.method1(string);
+        } else if (method.equals("Entitlements")) {
+            allowed = this.entitlementsService.method2(string, tokenValue);
         } else {
-            allowed = this.authService.method2(string, tokenValue);
+            LOG.info("Not supported!");
         }
         return allowed;
     }
