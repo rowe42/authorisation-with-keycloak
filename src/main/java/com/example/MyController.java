@@ -15,11 +15,11 @@ import org.springframework.web.bind.annotation.RequestParam;
  */
 @RestController
 public class MyController {
-    
+
     private final MyServiceClient service;
     private final AuthorisationService authService;
-    
-    private static final Logger LOG= Logger.getLogger(MyController.class.getName() );
+
+    private static final Logger LOG = Logger.getLogger(MyController.class.getName());
 
     public MyController(MyServiceClient service, AuthorisationService authService) {
         this.service = service;
@@ -30,17 +30,18 @@ public class MyController {
     @RequestMapping(value = "/hello", method = RequestMethod.POST)
     public String sayHello(@Valid @RequestBody Hello hello) {
         return this.service.sayHello(hello);
-    } 
-    
+    }
+
     @PreAuthorize("hasPermission(1, #permission, 'read')")
     @RequestMapping(value = "/method1", method = RequestMethod.GET)
     public String callMethod1(@Valid @RequestParam String permission) {
         return "executed Method 1";
-    } 
+    }
 
     @PreAuthorize("hasPermission(2, #permission, 'read')")
     @RequestMapping(value = "/method2", method = RequestMethod.GET)
     public String callMethod2(@Valid @RequestParam String permission) {
         return "executed Method 2";
-    } 
+    }
+
 }

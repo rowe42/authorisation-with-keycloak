@@ -3,6 +3,8 @@ package com.example;
 import com.example.model.TimedPermissions;
 import com.example.model.TimedPermissionTicket;
 import java.time.LocalDateTime;
+import java.time.ZoneOffset;
+import java.util.Date;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Map;
@@ -53,14 +55,18 @@ public class AuthorisationService {
         return checkPermissionWithUMA(permission);
     }
 
-    public boolean method2(String permission) {
-        LOG.info("Called method1 (Entitlements) with permission " + permission);
-        //dummy: set refresh date 60 secs to future
-        LocalDateTime refreshDate = LocalDateTime.now().plusSeconds(60);
-        return checkPermissionWithEntitlementsInCache("roland.werner", refreshDate, permission);
+    public boolean method2(String permission, String token) {
+        LOG.info("Called method2 (Entitlements) with permission " + permission);
+        LOG.info("Token " + token);
+        String claims = retrieveClaimsFromJWT(token);
+        LocalDateTime refreshDate = calculateExpirationFromJWT(claims);
+        String user = retrieveUsernameFromToken(claims);
+        LOG.info("Retrieved from token: username " + user + " refreshDate " +refreshDate);
+        return checkPermissionWithEntitlementsInCache(user, refreshDate, permission);
     }
 
     private boolean checkPermissionWithUMA(String permission) {
+        LOG.info("Called checkPermissionWithUMA");
         boolean allowed = false;
 
         //check whether we have permission ticket in "cache", otherwise fetch new
@@ -86,7 +92,7 @@ public class AuthorisationService {
         LocalDateTime refreshDate = null;
         if (timedPermissions != null) {
             LOG.info("Found Permissions in cache: " + timedPermissions.getPermissions().toString());
-            refreshDate = timedPermissions.getRefreshDate();            
+            refreshDate = timedPermissions.getRefreshDate();
         } else {
             LOG.info("No Permissions in cache");
             timedPermissions = new TimedPermissions();
@@ -104,12 +110,13 @@ public class AuthorisationService {
             timedPermissions.setPermissions(permissionsSet);
             timedPermissions.setRefreshDate(expiration);
             addPermissionsToCache(user, timedPermissions);
-            
+
             LOG.info("Permissions of user: " + timedPermissions.getPermissions().toString());
             if (permissionsSet.contains(permission)) {
                 allowed = true;
             }
         }
+        LOG.info("Permission checked, returning: " + allowed);
         return allowed;
     }
 
@@ -130,7 +137,7 @@ public class AuthorisationService {
     private TimedPermissions retrievePermissionsFromCache(String user) {
         return permissions.get(user);
     }
-    
+
     private void addPermissionsToCache(String user, TimedPermissions timedPermissions) {
         permissions.put(user, timedPermissions);
     }
@@ -142,13 +149,14 @@ public class AuthorisationService {
         //try to fetch permission from "cache"
         TimedPermissionTicket timedPermission = permissionTickets.get(permission);
         if (timedPermission != null) {
+            LOG.info("Found Permission Ticket in Cache");
             refreshDate = timedPermission.getRefreshDate();
             permissionTicket = timedPermission.getPermissionTicket();
         }
 
         //first of all check whether access token is not existing or not valid
         if (refreshDate == null || refreshDate.isBefore(LocalDateTime.now())) {
-
+            LOG.info("RefreshDate is not valid: " + refreshDate);
             //fetch new access token jwt
             String clientAccessToken = retrieveClientAccessToken();
 
@@ -159,6 +167,7 @@ public class AuthorisationService {
             //fetch new permission ticket
             try {
                 permissionTicket = retrievePermissionTicket(accessToken, permission);
+                LOG.info("Fetched new permission ticket");
             } catch (HttpClientErrorException e) {
                 LOG.info("Caught HttpClientErrorException - Permission not found");
             }
@@ -169,16 +178,35 @@ public class AuthorisationService {
             timedPermission.setRefreshDate(refreshDate);
             timedPermission.setPermissionTicket(permissionTicket);
             permissionTickets.put(permission, timedPermission);
+            LOG.info("Put permission in cache: " + permission);
 
         }
 
         return permissionTicket;
     }
 
+    private String retrieveClaimsFromJWT(String base64Token) {
+        Jwt jwt = JwtHelper.decode(base64Token);
+        String claims = jwt.getClaims();
+        return claims;
+    }
+    
     private LocalDateTime retrieveRefreshDateFromToken(String token) {
         int expiresIn = retrieveExpirationFromToken(token);
         LocalDateTime refreshDate = LocalDateTime.now().plusSeconds(expiresIn);
         return refreshDate;
+    }
+
+    private LocalDateTime calculateExpirationFromJWT(String base64Token) {
+        JSONObject responseJSON = new JSONObject(base64Token);
+        long exp = responseJSON.getInt("exp");
+        LocalDateTime ldt = LocalDateTime.ofEpochSecond(exp, 0, ZoneOffset.ofHours(2));
+
+        //long iat = responseJSON.getInt("iat");
+        //LocalDateTime ldt = LocalDateTime.now().plusSeconds(exp - iat);
+        LOG.info("Calculated RefreshDate: " + ldt);
+
+        return ldt;
     }
 
     private int retrieveExpirationFromToken(String token) {
@@ -186,6 +214,13 @@ public class AuthorisationService {
         int expiresIn = responseJSON.getInt("expires_in");
         return expiresIn;
     }
+    
+    private String retrieveUsernameFromToken(String token) {
+        JSONObject responseJSON = new JSONObject(token);
+        String username = responseJSON.getString("preferred_username");
+        return username;
+    }
+    
 
     private String retrieveClientAccessToken() {
         LOG.info("Called retrieveAccessToken");

@@ -6,9 +6,11 @@
 package com.example;
 
 import java.io.Serializable;
+import java.util.logging.Logger;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.access.PermissionEvaluator;
 import org.springframework.security.core.Authentication;
+import org.springframework.security.oauth2.provider.OAuth2Authentication;
 import org.springframework.security.oauth2.provider.authentication.OAuth2AuthenticationDetails;
 import org.springframework.stereotype.Service;
 
@@ -19,26 +21,32 @@ import org.springframework.stereotype.Service;
 @Service
 public class MyPermissionEvaluator implements PermissionEvaluator {
 
+    private static final Logger LOG = Logger.getLogger(MyPermissionEvaluator.class.getName());
     @Autowired    
     private final AuthorisationService authService = null;
     
     @Override
     public boolean hasPermission(Authentication a, Object o, Object o1) {
-        System.out.println("hasPermission reached.");
+        LOG.info("hasPermission called.");
         return true;
     }
 
     @Override
     public boolean hasPermission(Authentication a, Serializable srlzbl, String string, Object o) {
+        LOG.info("hasPermission called.");
         OAuth2AuthenticationDetails details = (OAuth2AuthenticationDetails) a.getDetails();
         String tokenValue = details.getTokenValue();
-        System.out.println("hasPermission2 reached. tokenValue: " + tokenValue + " " + string);
+        LOG.info("Principal " + ((OAuth2Authentication) a).getPrincipal());
+        LOG.info("Credential " + ((OAuth2Authentication) a).getCredentials());
+        LOG.info("Name " + ((OAuth2Authentication) a).getUserAuthentication().getName());        
+        
+        
         
         boolean allowed = false;
         if (srlzbl.equals(1)) {
             allowed = this.authService.method1(string);
         } else {
-            allowed = this.authService.method2(string);
+            allowed = this.authService.method2(string, tokenValue);
         }
         return allowed;
     }
