@@ -1,0 +1,21 @@
+spring.application.name: resource001
+
+server:
+  port: 8070
+
+management.security.enabled: false
+        
+security:
+  oauth2:
+    client:
+      clientId: openIdDemo
+      clientSecret: 29a1ded3-eadf-46cf-9af3-18cad9721691
+      accessTokenUri: http://localhost:8080/auth/realms/demo/protocol/openid-connect/token
+      userAuthorizationUri: http://localhost:8080/auth/realms/demo/protocol/openid-connect/auth
+    resource:
+       userInfoUri: http://localhost:8080/auth/realms/demo/protocol/openid-connect/userinfo        
+        
+logging:
+  level:
+    org.springframework.security: INFO
+    org.springframework.web: INFO
