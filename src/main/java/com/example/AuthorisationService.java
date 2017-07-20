@@ -89,12 +89,13 @@ public class AuthorisationService {
             try {
                 //with permissionTicket, retrieve Authorisation for the given permission
                 String rpt = retrieveRPTviaUMA(permissionTicket);
-                allowed = checkPermissionFromRPT(rpt, permission);
+                allowed = checkPermissionFromRPT(rpt, permission);                
             } catch (HttpClientErrorException e) {
                 LOG.info("Caught HttpClientErrorException - User not permitted");
             }
         }
 
+        LOG.info("Permission checked, returning " + allowed);
         return allowed;
     }
 

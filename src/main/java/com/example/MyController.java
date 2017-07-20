@@ -33,15 +33,52 @@ public class MyController {
     }
 
     @PreAuthorize("hasPermission(#permission, 'UMA')")
-    @RequestMapping(value = "/method1", method = RequestMethod.GET)
-    public String callMethod1(@Valid @RequestParam String permission) {
-        return "executed Method 1";
+    @RequestMapping(value = "/methodUMA", method = RequestMethod.GET)
+    public String callMethodUMA(@Valid @RequestParam String permission) {
+        return "executed callMethodUMA";
+    }
+
+    //@PreAuthorize("hasPermission('resource1', 'UMA')")
+    @PreAuthorize("hasPermission(T(com.example.ResourcesEnum).RESOURCE1.name(), 'UMA')")
+    @RequestMapping(value = "/methodUMA1", method = RequestMethod.GET)
+    public String callMethodUMA1() {
+        return "executed callMethodUMA1";
+    }
+
+    @PreAuthorize("hasPermission(T(com.example.ResourcesEnum).RESOURCE2.name(), 'UMA')")
+    @RequestMapping(value = "/methodUMA2", method = RequestMethod.GET)
+    public String callMethodUMA2() {
+        return "executed callMethodUMA2";
+    }
+
+    @PreAuthorize("hasPermission(T(com.example.ResourcesEnum).RESOURCE3.name(), 'UMA')")
+    @RequestMapping(value = "/methodUMA3", method = RequestMethod.GET)
+    public String callMethodUMA3() {
+        return "executed callMethodUMA3";
     }
 
     @PreAuthorize("hasPermission(#permission, 'Entitlements')")
-    @RequestMapping(value = "/method2", method = RequestMethod.GET)
-    public String callMethod2(@Valid @RequestParam String permission) {
-        return "executed Method 2";
+    @RequestMapping(value = "/methodEntitlements", method = RequestMethod.GET)
+    public String callmethodEntitlements(@Valid @RequestParam String permission) {
+        return "executed callmethodEntitlements";
+    }
+
+    @PreAuthorize("hasPermission(T(com.example.ResourcesEnum).RESOURCE1.name(), 'Entitlements')")
+    @RequestMapping(value = "/methodEntitlements1", method = RequestMethod.GET)
+    public String callmethodEntitlements1() {
+        return "executed callmethodEntitlements1";
+    }
+
+    @PreAuthorize("hasPermission(T(com.example.ResourcesEnum).RESOURCE2.name(), 'Entitlements')")
+    @RequestMapping(value = "/methodEntitlements2", method = RequestMethod.GET)
+    public String callmethodEntitlements2() {
+        return "executed callmethodEntitlements2";
+    }
+    
+    @PreAuthorize("hasPermission(T(com.example.ResourcesEnum).RESOURCE3.name(), 'Entitlements')")
+    @RequestMapping(value = "/methodEntitlements3", method = RequestMethod.GET)
+    public String callmethodEntitlements3() {
+        return "executed callmethodEntitlements3";
     }
 
 }
