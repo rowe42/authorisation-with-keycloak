@@ -9,6 +9,7 @@ import java.util.Set;
 import java.util.logging.Logger;
 import org.json.JSONArray;
 import org.json.JSONObject;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.HttpEntity;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.MediaType;
@@ -44,8 +45,12 @@ public class AuthorisationService {
     //hack: Permission Ticket "cache": permission --> TimedPermission
     private Map<String, TimedPermissionTicket> permissionTickets = new HashMap<>();
 
-
-
+    @Value("${security.oauth2.client.accessTokenUri}")
+    private String accessTokenUri;
+    @Value("${security.oauth2.uma.permissionUri}")
+    private String permissionUri;
+    @Value("${security.oauth2.uma.authorizeUri}")
+    private String authorizeUri;
     /**
      *
      * @param template
@@ -182,11 +187,11 @@ public class AuthorisationService {
         map.add("scope", "uma_authorization");
         map.add("client_secret", "29a1ded3-eadf-46cf-9af3-18cad9721691");
 
-        String url = "http://localhost:8080/auth/realms/demo/protocol/openid-connect/token";
+        //String url = "http://localhost:8080/auth/realms/demo/protocol/openid-connect/token";
 
         HttpEntity<MultiValueMap<String, String>> request = new HttpEntity<>(map, headers);
 
-        ResponseEntity<String> response = this.template.postForEntity(url, request, String.class);
+        ResponseEntity<String> response = this.template.postForEntity(accessTokenUri, request, String.class);
 
         LOG.info("access token retrieved");
         return response.getBody();
@@ -200,11 +205,11 @@ public class AuthorisationService {
 
         JSONObject body = new JSONObject().put("resource_set_name", resource);
 
-        String url = "http://localhost:8080/auth/realms/demo/authz/protection/permission";
+        //String url = "http://localhost:8080/auth/realms/demo/authz/protection/permission";
 
         HttpEntity<String> request = new HttpEntity<>(body.toString(), headers);
 
-        ResponseEntity<String> response = this.template.postForEntity(url, request, String.class);
+        ResponseEntity<String> response = this.template.postForEntity(permissionUri, request, String.class);
         JSONObject responseJSON = new JSONObject(response.getBody());
 
         LOG.info("permission ticket retrieved");
@@ -219,11 +224,11 @@ public class AuthorisationService {
 
         JSONObject body = new JSONObject().put("ticket", permissionTicket);
 
-        String url = "http://localhost:8080/auth/realms/demo/authz/authorize";
+        //String url = "http://localhost:8080/auth/realms/demo/authz/authorize";
 
         HttpEntity<String> request = new HttpEntity<>(body.toString(), headers);
 
-        ResponseEntity<String> response = this.oauth2Template.postForEntity(url, request, String.class);
+        ResponseEntity<String> response = this.oauth2Template.postForEntity(authorizeUri, request, String.class);
         JSONObject responseJSON = new JSONObject(response.getBody());
 
         LOG.info("authorisation retrieved");

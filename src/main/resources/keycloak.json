@@ -1,0 +1,8 @@
+{
+  "realm": "demo",
+  "auth-server-url" : "http://localhost:8080/auth",
+  "resource" : "openIdDemo",
+  "credentials": {
+    "secret": "29a1ded3-eadf-46cf-9af3-18cad9721691"
+  }
+}

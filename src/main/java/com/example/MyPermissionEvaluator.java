@@ -46,8 +46,11 @@ public class MyPermissionEvaluator implements PermissionEvaluator {
         if (method.equals("UMA")) {
             allowed = this.authService.method1(string);
         } else if (method.equals("Entitlements")) {
-            allowed = this.entitlementsService.method2(string, tokenValue);
-        } else {
+            allowed = this.entitlementsService.check(string, tokenValue, false);
+        } else if (method.equals("EntitlementsKeyCloakAPI")) {
+            allowed = this.entitlementsService.check(string, tokenValue, true);
+        }  
+        else {
             LOG.info("Not supported!");
         }
         return allowed;

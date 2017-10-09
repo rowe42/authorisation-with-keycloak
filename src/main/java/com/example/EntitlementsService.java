@@ -13,6 +13,9 @@ import java.util.Map;
 import java.util.Set;
 import java.util.logging.Logger;
 import org.json.JSONObject;
+import org.keycloak.authorization.client.AuthzClient;
+import org.keycloak.authorization.client.representation.EntitlementResponse;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.security.jwt.Jwt;
 import org.springframework.security.jwt.JwtHelper;
 import org.springframework.security.oauth2.client.OAuth2RestTemplate;
@@ -24,44 +27,50 @@ import org.springframework.stereotype.Service;
  */
 @Service
 public class EntitlementsService {
-    
+
     private static final Logger LOG = Logger.getLogger(EntitlementsService.class.getName());
-    
+
     private AuthorisationService authorisationService;
-        protected OAuth2RestTemplate oauth2Template;
+    protected OAuth2RestTemplate oauth2Template;
     
-        //hack: Entitlements "Cache": user --> permissions
+    @Value("${security.oauth2.entitlements.entitlementsUri}")
+    private String authUrl;
+
+    //hack: Entitlements "Cache": user --> permissions
     private Map<String, TimedPermissions> permissions = new HashMap<>();
-    
+
     public EntitlementsService(AuthorisationService authorisationService, OAuth2RestTemplate oauth2Template) {
         this.authorisationService = authorisationService;
         this.oauth2Template = oauth2Template;
     }
-    
-        /**method2 (Entitlements)
+
+    /**
+     * check (Entitlements)
      *
      * @param permission
      * @param token
      * @return
      */
-    public boolean method2(String permission, String token) {
+    public boolean check(String permission, String token, boolean useKeyCloakApi) {
         LOG.info("Called method2 (Entitlements) with permission " + permission);
         LOG.info("Token " + token);
         String claims = retrieveClaimsFromJWT(token);
         LocalDateTime refreshDate = calculateExpirationFromJWT(claims);
         String user = retrieveUsernameFromToken(claims);
-        LOG.info("Retrieved from token: username " + user + " refreshDate " +refreshDate);
-        return checkPermissionWithEntitlementsInCache(user, refreshDate, permission);
+        LOG.info("Retrieved from token: username " + user + " refreshDate " + refreshDate);
+        return checkPermissionWithEntitlementsInCache(user, refreshDate, permission, token, useKeyCloakApi);
     }
-    
+
+
     /**
      * Check Permission with Entitlements. Check Cache first.
+     *
      * @param user
      * @param expiration
      * @param permission
-     * @return 
+     * @return
      */
-    private boolean checkPermissionWithEntitlementsInCache(String user, LocalDateTime expiration, String permission) {
+    private boolean checkPermissionWithEntitlementsInCache(String user, LocalDateTime expiration, String permission, String token, boolean useKeyCloakApi) {
         LOG.info("Called checkPermissionWithEntitlementsInCache");
         boolean allowed = false;
         TimedPermissions timedPermissions = retrievePermissionsFromCache(user);
@@ -81,7 +90,15 @@ public class EntitlementsService {
         } else {
             //not found in cache or no longer valid --> fetch new
             LOG.info("Permissions no longer valid. RefreshDate: " + refreshDate + ", Now is " + LocalDateTime.now());
-            String rpt = retrieveRPTviaEntitlements();
+            
+            String rpt;
+            if (useKeyCloakApi) {
+                rpt = retrieveRPTviaEntitlementsWithKeyCloakAPI(token);
+            } else {
+                rpt = retrieveRPTviaEntitlements();
+            }
+            
+            
             Set<String> permissionsSet = authorisationService.extractPermissionsFromRPT(rpt);
             timedPermissions.setPermissions(permissionsSet);
             timedPermissions.setRefreshDate(expiration);
@@ -95,8 +112,7 @@ public class EntitlementsService {
         LOG.info("Permission checked, returning: " + allowed);
         return allowed;
     }
-    
-    
+
     private TimedPermissions retrievePermissionsFromCache(String user) {
         return permissions.get(user);
     }
@@ -104,15 +120,13 @@ public class EntitlementsService {
     private void addPermissionsToCache(String user, TimedPermissions timedPermissions) {
         permissions.put(user, timedPermissions);
     }
-    
-    
+
     private String retrieveClaimsFromJWT(String base64Token) {
         Jwt jwt = JwtHelper.decode(base64Token);
         String claims = jwt.getClaims();
         return claims;
     }
-    
-    
+
     private LocalDateTime calculateExpirationFromJWT(String base64Token) {
         JSONObject responseJSON = new JSONObject(base64Token);
         long exp = responseJSON.getInt("exp");
@@ -124,22 +138,39 @@ public class EntitlementsService {
 
         return ldt;
     }
-    
-    
+
+    /**
+     * Calls Entitlements-API directly without KeyCloak-specific Code.
+     * @return The retrieved RPT
+     */
     private String retrieveRPTviaEntitlements() {
         LOG.info("Called retrieveEntitlements");
 
-        String url = "http://localhost:8080/auth/realms/demo/authz/entitlement/openIdDemo";
+        //String url = "http://localhost:8080/auth/realms/demo/authz/entitlement/openIdDemo";
 
-        String response = this.oauth2Template.getForObject(url, String.class);
+        String response = this.oauth2Template.getForObject(authUrl, String.class);
 
         JSONObject responseJSON = new JSONObject(response);
 
         LOG.info("entitlements retrieved");
         return responseJSON.getString("rpt");
     }
-    
-        
+
+    /**
+     * Calls Entitlements-API with the help of keycloak specific classes.
+     * @param token The User Access Token
+     * @return The retrieved RPT
+     */
+    private String retrieveRPTviaEntitlementsWithKeyCloakAPI(String token) {
+        AuthzClient authzClient = AuthzClient.create();
+
+        EntitlementResponse response = authzClient.entitlement(token)
+                .getAll("openIdDemo");
+        String rpt = response.getRpt();
+        LOG.info("Got this RPT: " + rpt);
+        return rpt;
+    }
+
     public String retrieveUsernameFromToken(String token) {
         JSONObject responseJSON = new JSONObject(token);
         String username = responseJSON.getString("preferred_username");
