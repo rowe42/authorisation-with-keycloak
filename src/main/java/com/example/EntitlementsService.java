@@ -146,8 +146,6 @@ public class EntitlementsService {
     private String retrieveRPTviaEntitlements() {
         LOG.info("Called retrieveEntitlements");
 
-        //String url = "http://localhost:8080/auth/realms/demo/authz/entitlement/openIdDemo";
-
         String response = this.oauth2Template.getForObject(authUrl, String.class);
 
         JSONObject responseJSON = new JSONObject(response);
