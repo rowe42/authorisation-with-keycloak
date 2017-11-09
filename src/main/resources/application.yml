@@ -9,7 +9,7 @@ security:
   oauth2:
     client:
       clientId: openIdDemo
-      clientSecret: 29a1ded3-eadf-46cf-9af3-18cad9721691
+      clientSecret: a5396a8c-d074-4768-a7b3-f95e6d310f20
       accessTokenUri: http://localhost:8080/auth/realms/demo/protocol/openid-connect/token
       userAuthorizationUri: http://localhost:8080/auth/realms/demo/protocol/openid-connect/auth
     resource:
