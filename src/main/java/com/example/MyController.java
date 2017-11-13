@@ -17,13 +17,11 @@ import org.springframework.web.bind.annotation.RequestParam;
 public class MyController {
 
     private final MyServiceClient service;
-    private final AuthorisationService authService;
 
     private static final Logger LOG = Logger.getLogger(MyController.class.getName());
 
-    public MyController(MyServiceClient service, AuthorisationService authService) {
+    public MyController(MyServiceClient service) {
         this.service = service;
-        this.authService = authService;
     }
 
 //    @PreAuthorize("hasAuthority('RESOURCE_001_HELLO')")

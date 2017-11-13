@@ -1,15 +1,10 @@
 package com.example;
 
-import com.example.model.TimedPermissions;
-import com.example.model.TimedPermissionTicket;
 import com.netflix.hystrix.contrib.javanica.annotation.HystrixCommand;
-import java.util.HashMap;
-import java.util.Map;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 import org.springframework.cloud.client.circuitbreaker.EnableCircuitBreaker;
 import org.springframework.http.ResponseEntity;
-import org.springframework.security.oauth2.client.OAuth2RestTemplate;
 import org.springframework.stereotype.Service;
 import org.springframework.web.client.RestTemplate;
 
