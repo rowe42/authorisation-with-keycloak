@@ -10,7 +10,7 @@ import org.springframework.security.oauth2.config.annotation.web.configuration.E
 @SpringBootApplication
 //@EnableResourceServer
 @EnableOAuth2Sso
-@ComponentScan("de.muenchen.referenzarchitektur.authorisationLib")
+@ComponentScan("de.muenchen.referenzarchitektur.authorisationLib, com.example")
 @EnableGlobalMethodSecurity(prePostEnabled = true)
 public class Application {
 
