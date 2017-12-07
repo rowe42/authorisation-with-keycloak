@@ -1,5 +1,7 @@
 package com.example;
 
+import de.muenchen.referenzarchitektur.authorisationLib.EntitlementsService;
+import java.util.Set;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
@@ -17,17 +19,29 @@ import org.springframework.web.bind.annotation.RequestParam;
 public class MyController {
 
     private final MyServiceClient service;
+    private final EntitlementsService entitlementsService;
 
     private static final Logger LOG = Logger.getLogger(MyController.class.getName());
 
-    public MyController(MyServiceClient service) {
+    public MyController(MyServiceClient service, EntitlementsService entitlementsService) {
         this.service = service;
+        this.entitlementsService = entitlementsService;
     }
 
 //    @PreAuthorize("hasAuthority('RESOURCE_001_HELLO')")
     @RequestMapping(value = "/hello", method = RequestMethod.POST)
     public String sayHello(@Valid @RequestBody Hello hello) {
         return this.service.sayHello(hello);
+    }
+    
+    @RequestMapping(value = "/getPermissions", method = RequestMethod.GET)
+    public String getPermissions() {
+        Set <String> permissions = entitlementsService.getPermissions();
+        if (permissions != null) {
+            return permissions.toString();
+        } else {
+            return "No Permissions found.";
+        }
     }
 
     @PreAuthorize("hasPermission(#permission, 'UMA')")
