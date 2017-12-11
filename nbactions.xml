@@ -11,4 +11,14 @@
                 <skipTests>true</skipTests>
             </properties>
         </action>
+        <action>
+            <actionName>CUSTOM-run local</actionName>
+            <displayName>run local</displayName>
+            <goals>
+                <goal>spring-boot:run</goal>
+            </goals>
+            <properties>
+                <spring.profiles.active>local</spring.profiles.active>
+            </properties>
+        </action>
     </actions>

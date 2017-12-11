@@ -1,8 +1,8 @@
 {
-  "realm": "demo",
-  "auth-server-url" : "http://localhost:8080/auth",
+  "realm": "SampleApps",
+  "auth-server-url" : "http://caswik002.testlhm.de:8080/auth",
   "resource" : "openIdDemo",
   "credentials": {
-    "secret": "a5396a8c-d074-4768-a7b3-f95e6d310f20"
+    "secret": "945192b3-412e-48b4-92c9-f25e0a874116"
   }
 }

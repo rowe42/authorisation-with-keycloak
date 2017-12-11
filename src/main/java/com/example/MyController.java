@@ -36,7 +36,7 @@ public class MyController {
     
     @RequestMapping(value = "/getPermissions", method = RequestMethod.GET)
     public String getPermissions() {
-        Set <String> permissions = entitlementsService.getPermissions();
+        Set <String> permissions = entitlementsService.getPermissions(false);
         if (permissions != null) {
             return permissions.toString();
         } else {

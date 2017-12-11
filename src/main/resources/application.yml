@@ -4,6 +4,39 @@ server:
   port: 8070
 
 management.security.enabled: false
+
+        
+logging:
+  level:
+    org.springframework.security: INFO
+    org.springframework.web: INFO        
+
+---
+
+spring:
+    profiles: home        
+        
+security:
+  oauth2:
+    client:
+      clientId: openIdDemo
+      clientSecret: efa982df-8169-4b95-b066-d41be0ef5a52
+      accessTokenUri: http://localhost:4000/auth/realms/demo/protocol/openid-connect/token
+      userAuthorizationUri: http://localhost:4000/auth/realms/demo/protocol/openid-connect/auth
+    resource:
+      userInfoUri: http://localhost:4000/auth/realms/demo/protocol/openid-connect/userinfo        
+    #added for Entitlements API
+    entitlements:
+      entitlementsUri: http://localhost:4000/auth/realms/demo/authz/entitlement/openIdDemo      
+    #added for UMA
+    uma:
+      permissionUri: http://localhost:4000/auth/realms/demo/authz/protection/permission
+      authorizeUri: http://localhost:4000/auth/realms/demo/authz/authorize
+
+---
+
+spring:
+    profiles: local        
         
 security:
   oauth2:
@@ -21,8 +54,26 @@ security:
     uma:
       permissionUri: http://localhost:8080/auth/realms/demo/authz/protection/permission
       authorizeUri: http://localhost:8080/auth/realms/demo/authz/authorize
-        
-logging:
-  level:
-    org.springframework.security: INFO
-    org.springframework.web: INFO
+
+
+---
+
+spring:
+    profiles: server
+
+security:
+  oauth2:
+    client:
+      clientId: openIdDemo
+      clientSecret: 945192b3-412e-48b4-92c9-f25e0a874116
+      accessTokenUri: http://caswik002.testlhm.de:8080/auth/realms/SampleApps/protocol/openid-connect/token
+      userAuthorizationUri: http://caswik002.testlhm.de:8080/auth/realms/SampleApps/protocol/openid-connect/auth
+    resource:
+      userInfoUri: http://caswik002.testlhm.de:8080/auth/realms/SampleApps/protocol/openid-connect/userinfo        
+    #added for Entitlements API
+    entitlements:
+      entitlementsUri: http://caswik002.testlhm.de:8080/auth/realms/SampleApps/authz/entitlement/openIdDemo      
+    #added for UMA
+    uma:
+      permissionUri: http://caswik002.testlhm.de:8080/auth/realms/SampleApps/authz/protection/permission
+      authorizeUri: http://caswik002.testlhm.de:8080/auth/realms/SampleApps/authz/authorize
