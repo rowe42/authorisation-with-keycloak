@@ -42,18 +42,18 @@ security:
   oauth2:
     client:
       clientId: openIdDemo
-      clientSecret: a5396a8c-d074-4768-a7b3-f95e6d310f20
-      accessTokenUri: http://localhost:8080/auth/realms/demo/protocol/openid-connect/token
-      userAuthorizationUri: http://localhost:8080/auth/realms/demo/protocol/openid-connect/auth
+      clientSecret: 3ae2aae2-88b5-46ed-82bb-5059aa13bf86
+      accessTokenUri: http://localhost:8080/auth/realms/otprealm/protocol/openid-connect/token
+      userAuthorizationUri: http://localhost:8080/auth/realms/otprealm/protocol/openid-connect/auth
     resource:
-      userInfoUri: http://localhost:8080/auth/realms/demo/protocol/openid-connect/userinfo        
+      userInfoUri: http://localhost:8080/auth/realms/otprealm/protocol/openid-connect/userinfo        
     #added for Entitlements API
     entitlements:
-      entitlementsUri: http://localhost:8080/auth/realms/demo/authz/entitlement/openIdDemo      
+      entitlementsUri: http://localhost:8080/auth/realms/otprealm/authz/entitlement/openIdDemo      
     #added for UMA
     uma:
-      permissionUri: http://localhost:8080/auth/realms/demo/authz/protection/permission
-      authorizeUri: http://localhost:8080/auth/realms/demo/authz/authorize
+      permissionUri: http://localhost:8080/auth/realms/otprealm/authz/protection/permission
+      authorizeUri: http://localhost:8080/auth/realms/otprealm/authz/authorize
 
 
 ---

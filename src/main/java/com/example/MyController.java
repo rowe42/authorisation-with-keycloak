@@ -33,10 +33,10 @@ public class MyController {
     public String sayHello(@Valid @RequestBody Hello hello) {
         return this.service.sayHello(hello);
     }
-    
+
     @RequestMapping(value = "/getPermissions", method = RequestMethod.GET)
     public String getPermissions() {
-        Set <String> permissions = entitlementsService.getPermissions(false);
+        Set<String> permissions = entitlementsService.getPermissions(false);
         if (permissions != null) {
             return permissions.toString();
         } else {
@@ -86,19 +86,19 @@ public class MyController {
     public String callmethodEntitlements2() {
         return "executed callmethodEntitlements2";
     }
-    
+
     @PreAuthorize("hasPermission(T(com.example.ResourcesEnum).RESOURCE3.name(), 'Entitlements')")
     @RequestMapping(value = "/methodEntitlements3", method = RequestMethod.GET)
     public String callmethodEntitlements3() {
         return "executed callmethodEntitlements3";
     }
-    
-        @PreAuthorize("hasPermission(#permission, 'EntitlementsKeyCloakAPI')")
+
+    @PreAuthorize("hasPermission(#permission, 'EntitlementsKeyCloakAPI')")
     @RequestMapping(value = "/methodEntitlementsKeyCloak", method = RequestMethod.GET)
     public String callmethodEntitlementsKeyCloakAPI(@Valid @RequestParam String permission) {
         return "executed callmethodEntitlements";
     }
-    
+
     @PreAuthorize("hasPermission(T(com.example.ResourcesEnum).RESOURCE1.name(), 'EntitlementsKeyCloakAPI')")
     @RequestMapping(value = "/methodEntitlements1KeyCloak", method = RequestMethod.GET)
     public String callmethodEntitlements1KeyCloakAPI() {
@@ -110,12 +110,34 @@ public class MyController {
     public String callmethodEntitlements2KeyCloakAPI() {
         return "executed callmethodEntitlements2";
     }
-    
+
     @PreAuthorize("hasPermission(T(com.example.ResourcesEnum).RESOURCE3.name(), 'EntitlementsKeyCloakAPI')")
     @RequestMapping(value = "/methodEntitlements3KeyCloak", method = RequestMethod.GET)
     public String callmethodEntitlements3KeyCloakAPI() {
         return "executed callmethodEntitlements3";
     }
-    
 
+    @PreAuthorize("hasPermission(#permission, 'EntitlementsNoCache')")
+    @RequestMapping(value = "/methodEntitlementsNoCache", method = RequestMethod.GET)
+    public String callmethodEntitlementsNoCache(@Valid @RequestParam String permission) {
+        return "executed callmethodEntitlements";
+    }
+
+    @PreAuthorize("hasPermission(T(com.example.ResourcesEnum).RESOURCE1.name(), 'EntitlementsNoCache')")
+    @RequestMapping(value = "/methodEntitlements1NoCache", method = RequestMethod.GET)
+    public String callmethodEntitlements1NoCache() {
+        return "executed callmethodEntitlements1";
+    }
+
+    @PreAuthorize("hasPermission(T(com.example.ResourcesEnum).RESOURCE2.name(), 'EntitlementsNoCache')")
+    @RequestMapping(value = "/methodEntitlements2NoCache", method = RequestMethod.GET)
+    public String callmethodEntitlements2NoCache() {
+        return "executed callmethodEntitlements2";
+    }
+
+    @PreAuthorize("hasPermission(T(com.example.ResourcesEnum).RESOURCE3.name(), 'EntitlementsNoCache')")
+    @RequestMapping(value = "/methodEntitlements3NoCache", method = RequestMethod.GET)
+    public String callmethodEntitlements3NoCache() {
+        return "executed callmethodEntitlements3";
+    }
 }
